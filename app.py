@@ -9,6 +9,8 @@ st.title("Disease Bio Explorer")
 
 disease = st.text_input("Enter Disease Name")
 
+# ----------- GENOME DATA FROM NCBI -----------
+
 if disease:
 
     search = Entrez.esearch(db="nucleotide", term=disease, retmax=1)
@@ -30,40 +32,48 @@ if disease:
     st.write("UniProt:", f"https://www.uniprot.org/uniprotkb?query={disease}")
     st.write("WHO Data:", "https://www.who.int/data")
 
-# ----------- GLOBAL DATA VISUALIZATION -----------
+# ----------- SELECT DATASET BASED ON DISEASE -----------
 
-st.subheader("Global Disease Data")
+data = None
 
-url = "https://raw.githubusercontent.com/owid/covid-19-data/master/public/data/owid-covid-data.csv"
-data = pd.read_csv(url)
+if disease:
 
-# ----------- CASES OVER TIME GRAPH -----------
+    disease_lower = disease.lower()
 
-st.subheader("Cases Over Time (India Example)")
+    if "covid" in disease_lower:
+        url = "https://raw.githubusercontent.com/owid/covid-19-data/master/public/data/owid-covid-data.csv"
+        data = pd.read_csv(url)
 
-india_data = data[data["location"] == "India"]
+    elif "dengue" in disease_lower:
+        url = "https://raw.githubusercontent.com/owid/owid-datasets/master/datasets/Dengue%20cases%20WHO/Dengue%20cases%20WHO.csv"
+        data = pd.read_csv(url)
 
-fig = px.line(
-    india_data,
-    x="date",
-    y="total_cases",
-    title="Total Disease Cases Over Time"
-)
+    elif "malaria" in disease_lower:
+        url = "https://raw.githubusercontent.com/owid/owid-datasets/master/datasets/Malaria%20cases%20WHO/Malaria%20cases%20WHO.csv"
+        data = pd.read_csv(url)
 
-st.plotly_chart(fig)
+# ----------- VISUALIZATION -----------
 
-# ----------- WORLD MAP -----------
+if data is not None:
 
-st.subheader("Global Disease Distribution")
+    st.subheader("Global Disease Distribution")
 
-latest = data.sort_values("date").groupby("location").tail(1)
+    # detect column names automatically
+    country_col = data.columns[0]
+    value_col = data.columns[-1]
 
-fig_map = px.choropleth(
-    latest,
-    locations="iso_code",
-    color="total_cases",
-    hover_name="location",
-    title="Global Disease Cases"
-)
+    country_data = data.groupby(country_col)[value_col].sum().reset_index()
 
-st.plotly_chart(fig_map)
+    fig_map = px.choropleth(
+        country_data,
+        locations=country_col,
+        locationmode="country names",
+        color=value_col,
+        title="Disease Cases by Country"
+    )
+
+    st.plotly_chart(fig_map)
+
+else:
+    if disease:
+        st.warning("Epidemiology dataset not available for this disease yet.")
