@@ -41,36 +41,47 @@ data = None
 try:
 
     if "covid" in disease.lower():
-        url = "https://raw.githubusercontent.com/owid/covid-19-data/master/public/data/owid-covid-data.csv"
+        url = "https://covid.ourworldindata.org/data/owid-covid-data.csv"
         data = pd.read_csv(url)
 
     elif "dengue" in disease.lower():
-        url = "https://raw.githubusercontent.com/holtzy/D3-graph-gallery/master/DATA/world_population.csv"
+        url = "https://raw.githubusercontent.com/plotly/datasets/master/2014_world_gdp_with_codes.csv"
         data = pd.read_csv(url)
 
     elif "malaria" in disease.lower():
-        url = "https://raw.githubusercontent.com/holtzy/D3-graph-gallery/master/DATA/world_population.csv"
+        url = "https://raw.githubusercontent.com/plotly/datasets/master/2014_world_gdp_with_codes.csv"
         data = pd.read_csv(url)
 
-except:
-    st.warning("Could not load epidemiology dataset.")
-
+except Exception as e:
+    st.error("Could not load epidemiology dataset.")
 # ----------- VISUALIZATION -----------
 
 if data is not None:
 
-    st.subheader("Global Distribution")
+    st.subheader("Global Distribution Map")
 
-    country_col = data.columns[0]
-    value_col = data.columns[-1]
+    if "covid" in disease.lower():
 
-    country_data = data.groupby(country_col)[value_col].sum().reset_index()
+        latest = data.sort_values("date").groupby("location").tail(1)
 
-    fig_map = px.choropleth(
-        country_data,
-        locations=country_col,
-        locationmode="country names",
-        color=value_col
-    )
+        fig_map = px.choropleth(
+            latest,
+            locations="iso_code",
+            color="total_cases",
+            hover_name="location",
+            title="Global COVID Cases"
+        )
 
-    st.plotly_chart(fig_map)
+        st.plotly_chart(fig_map)
+
+    else:
+
+        fig_map = px.choropleth(
+            data,
+            locations="CODE",
+            color="GDP (BILLIONS)",
+            hover_name="COUNTRY",
+            title="Global Distribution Example"
+        )
+
+        st.plotly_chart(fig_map)
