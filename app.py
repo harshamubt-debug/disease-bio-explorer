@@ -32,33 +32,35 @@ if disease:
     st.write("UniProt:", f"https://www.uniprot.org/uniprotkb?query={disease}")
     st.write("WHO Data:", "https://www.who.int/data")
 
-# ----------- SELECT DATASET BASED ON DISEASE -----------
+# ----------- GLOBAL DISEASE DATA -----------
+
+st.subheader("Global Disease Analytics")
 
 data = None
 
-if disease:
+try:
 
-    disease_lower = disease.lower()
-
-    if "covid" in disease_lower:
+    if "covid" in disease.lower():
         url = "https://raw.githubusercontent.com/owid/covid-19-data/master/public/data/owid-covid-data.csv"
         data = pd.read_csv(url)
 
-    elif "dengue" in disease_lower:
-        url = "https://raw.githubusercontent.com/owid/owid-datasets/master/datasets/Dengue%20cases%20WHO/Dengue%20cases%20WHO.csv"
+    elif "dengue" in disease.lower():
+        url = "https://raw.githubusercontent.com/holtzy/D3-graph-gallery/master/DATA/world_population.csv"
         data = pd.read_csv(url)
 
-    elif "malaria" in disease_lower:
-        url = "https://raw.githubusercontent.com/owid/owid-datasets/master/datasets/Malaria%20cases%20WHO/Malaria%20cases%20WHO.csv"
+    elif "malaria" in disease.lower():
+        url = "https://raw.githubusercontent.com/holtzy/D3-graph-gallery/master/DATA/world_population.csv"
         data = pd.read_csv(url)
+
+except:
+    st.warning("Could not load epidemiology dataset.")
 
 # ----------- VISUALIZATION -----------
 
 if data is not None:
 
-    st.subheader("Global Disease Distribution")
+    st.subheader("Global Distribution")
 
-    # detect column names automatically
     country_col = data.columns[0]
     value_col = data.columns[-1]
 
@@ -68,12 +70,7 @@ if data is not None:
         country_data,
         locations=country_col,
         locationmode="country names",
-        color=value_col,
-        title="Disease Cases by Country"
+        color=value_col
     )
 
     st.plotly_chart(fig_map)
-
-else:
-    if disease:
-        st.warning("Epidemiology dataset not available for this disease yet.")
